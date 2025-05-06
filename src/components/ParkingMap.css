@@ -1,0 +1,66 @@
+.parking-lot {
+  background-color: #2b2b2b;
+  padding: 40px;
+  border: 2px solid #444;
+  border-radius: 15px;
+  width: 90%;
+  margin: 40px auto;
+  box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.slot {
+  color: white;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 3px dashed #ccc;
+  border-radius: 12px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(145deg, #1c1c1c, #2a2a2a);
+  transition: transform 0.3s ease, border-color 0.3s;
+  text-align: center;
+  cursor: pointer;
+}
+
+.slot:hover {
+  transform: scale(1.05);
+  border-color: #4caf50;
+}
+
+.large-slot {
+  width: 320px;
+  height: 160px;
+  margin-bottom: 40px;
+  transform: rotateX(10deg) rotateY(-8deg);
+  margin-right: 30px;
+  margin-bottom: 30px;
+}
+
+.row {
+  display: flex;
+  gap: 30px;
+  justify-content: center;
+  width: 100%;
+}
+
+.small-slot {
+  width: 120px;
+  height: 200px;
+  transform: rotateX(18deg) rotateY(5deg);
+  margin-bottom: 20px;
+  margin-right: 30px;
+}
+
+.slot-occupied {
+  background-color: #d32f2f; /* Red for occupied slots */
+  border-color: #e53935;
+}
+
+.slot-free {
+  background-color: #388e3c; /* Green for free slots */
+  border-color: #43a047;
+}

@@ -26,6 +26,7 @@ const Navbar = ({ user, setUser }) => {
                 </>
               )}
               <Link to="/available-slots" className="hover:text-gray-300">Available Slots</Link>
+              <Link to="/parking-map" className="hover:text-gray-300">Parking Map</Link>
               <Link to="/slot-overview" className="hover:text-gray-300">SlotOverview</Link>
               <Link to="/visitor-parking" className="hover:text-gray-300">Visitor Parking</Link>
               <button onClick={handleLogout} className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded">Logout</button>

@@ -15,15 +15,12 @@ const AvailableSlots = ({ user }) => {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // Include all 5 slots
   const allSlots = ['Slot 1', 'Slot 2', 'Slot 3', 'Slot 4', 'Slot 5'];
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'parkingSlots'), (snapshot) => {
       const occupied = snapshot.docs.map(doc => doc.data().slot);
-      console.log('Occupied slots:', occupied); // Debugging line
       const available = allSlots.filter(slot => !occupied.includes(slot));
-      console.log('Available slots:', available); // Debugging line
       setSlots(available);
       setLoading(false);
     });
@@ -61,30 +58,39 @@ const AvailableSlots = ({ user }) => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 mt-10 bg-white shadow-md rounded-md">
-      <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">🚗 Available Parking Slots</h2>
+    <div className="max-w-lg mx-auto p-6 mt-10 bg-white shadow-lg rounded-lg">
+      <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
+        Available Parking Slot 
+      </h2>
 
       {loading ? (
         <p className="text-center text-gray-500">Loading slots...</p>
-      ) : slots.length > 0 ? (
-        <ul className="space-y-3">
-          {slots.map((slot, index) => (
-            <li key={index}>
-              <button
-                onClick={() => handleBookSlot(slot)}
-                className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded transition"
-              >
-                Request {slot}
-              </button>
-            </li>
-          ))}
-        </ul>
       ) : (
-        <p className="text-center text-gray-500">No available slots at the moment.</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          {allSlots.map((slot, index) => {
+            const isAvailable = slots.includes(slot);
+            return (
+              <div
+                key={index}
+                className={`border rounded-lg text-center py-6 font-semibold transition cursor-pointer ${
+                  isAvailable
+                    ? 'bg-green-100 hover:bg-green-200 text-green-800'
+                    : 'bg-red-100 text-red-600 cursor-not-allowed'
+                }`}
+                onClick={() => isAvailable && handleBookSlot(slot)}
+              >
+                {slot}
+                <div className="mt-1 text-xs">
+                  {isAvailable ? 'Available' : 'Occupied'}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
 
       {message && (
-        <div className="mt-6 text-center text-sm text-green-600">
+        <div className="mt-6 text-center text-sm text-blue-700 font-medium">
           {message}
         </div>
       )}

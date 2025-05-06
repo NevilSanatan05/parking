@@ -2,19 +2,38 @@
 import React from 'react';
 
 const ParkingSlot = ({ slot, status, onClick }) => {
-  const statusColor = {
-    Available: 'bg-green-200',
-    Occupied: 'bg-red-200',
-    Reserved: 'bg-yellow-200',
+  const statusStyles = {
+    Available: {
+      bg: 'bg-green-500 hover:bg-green-600',
+      icon: '🅿️',
+      cursor: 'cursor-pointer',
+    },
+    Occupied: {
+      bg: 'bg-red-500',
+      icon: '🚫',
+      cursor: 'cursor-not-allowed',
+    },
+    Reserved: {
+      bg: 'bg-yellow-400',
+      icon: '⛔',
+      cursor: 'cursor-not-allowed',
+    },
   };
+
+  const current = statusStyles[status] || statusStyles.Available;
 
   return (
     <div
-      onClick={onClick}
-      className={`p-4 border rounded cursor-pointer text-center ${statusColor[status]}`}
+      onClick={status === 'Available' ? onClick : null}
+      className={`
+        w-28 h-28 sm:w-32 sm:h-32 m-2 rounded-lg flex flex-col items-center justify-center
+        text-white font-bold text-sm shadow-lg transition-transform transform hover:scale-105
+        ${current.bg} ${current.cursor}
+      `}
     >
-      <h3 className="text-lg font-semibold">{slot.id}</h3>
-      <p className="text-sm">{status}</p>
+      <div className="text-2xl">{current.icon}</div>
+      <div className="mt-1">{slot.id}</div>
+      <div className="text-xs mt-1">{status}</div>
     </div>
   );
 };
