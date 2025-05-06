@@ -1,12 +1,19 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebase-config'; // Ensure this path is correct
 
 const Navbar = ({ user, setUser }) => {
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    setUser(null);
-    navigate('/');
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);       // Sign out from Firebase
+      setUser(null);             // Clear local user state
+      navigate('/');             // Redirect to login
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
   return (
@@ -27,9 +34,11 @@ const Navbar = ({ user, setUser }) => {
               )}
               <Link to="/available-slots" className="hover:text-gray-300">Available Slots</Link>
               <Link to="/parking-map" className="hover:text-gray-300">Parking Map</Link>
-              <Link to="/slot-overview" className="hover:text-gray-300">SlotOverview</Link>
+              <Link to="/slot-overview" className="hover:text-gray-300">Slot Overview</Link>
               <Link to="/visitor-parking" className="hover:text-gray-300">Visitor Parking</Link>
-              <button onClick={handleLogout} className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded">Logout</button>
+              <button onClick={handleLogout} className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded">
+                Logout
+              </button>
             </>
           ) : (
             <>
