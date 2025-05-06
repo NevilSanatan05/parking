@@ -11,15 +11,20 @@ const SlotOverview = () => {
 
   // Function to fetch slot data
   const fetchSlots = async () => {
-    setLoading(true); // Start loading while fetching data
+    setLoading(true);
     try {
       const slotSnapshot = await getDocs(collection(db, 'parkingSlots'));
       const visitorSnapshot = await getDocs(collection(db, 'visitorReservations'));
 
-      const assignedSlots = slotSnapshot.docs.map(doc => doc.data().slot);
-      const reservedSlots = visitorSnapshot.docs.map(doc => doc.data().slot);
+      // Only include user slots with "approved" status
+      const approvedSlots = slotSnapshot.docs
+        .filter(doc => doc.data().status === 'approved')
+        .map(doc => doc.data().slot);
 
-      const occupied = [...new Set([...assignedSlots, ...reservedSlots])];
+      // Include all visitor reservations
+      const visitorSlots = visitorSnapshot.docs.map(doc => doc.data().slot);
+
+      const occupied = [...new Set([...approvedSlots, ...visitorSlots])];
       const available = allSlots.filter(slot => !occupied.includes(slot));
 
       setOccupiedSlots(occupied);
@@ -27,12 +32,12 @@ const SlotOverview = () => {
     } catch (error) {
       console.error('Error fetching slot data:', error);
     } finally {
-      setLoading(false); // Set loading to false when the fetch is complete
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchSlots(); // Fetch slots when component mounts
+    fetchSlots();
   }, []);
 
   return (

@@ -1,23 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebase-config';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { FaTrashAlt } from 'react-icons/fa';
 
 const ParkingSlotHistory = () => {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchHistory = async () => {
+    setLoading(true);
+    try {
+      const querySnapshot = await getDocs(collection(db, 'parkingSlotHistory'));
+      setHistory(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    } catch (error) {
+      console.error('Failed to fetch parking slot history:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteRecord = async (id) => {
+    const confirm = window.confirm("Are you sure you want to delete this history record?");
+    if (!confirm) return;
+
+    try {
+      await deleteDoc(doc(db, 'parkingSlotHistory', id));
+      setHistory(prev => prev.filter(record => record.id !== id));
+    } catch (error) {
+      console.error('Failed to delete record:', error);
+      alert('Failed to delete the record. Please try again.');
+    }
+  };
+
   useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, 'parkingSlotHistory'));
-        setHistory(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-      } catch (error) {
-        console.error('Failed to fetch parking slot history:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchHistory();
   }, []);
 
@@ -51,7 +66,7 @@ const ParkingSlotHistory = () => {
                       <button
                         className="text-red-600 hover:text-red-800 transition"
                         title="Delete Record"
-                        onClick={() => alert('Delete functionality can be implemented here')}
+                        onClick={() => deleteRecord(record.id)}
                       >
                         <FaTrashAlt />
                       </button>

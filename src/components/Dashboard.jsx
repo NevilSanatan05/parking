@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../firebase-config';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
 
-const Dashboard = ({ user, setUser }) => {
-  const [slot, setSlot] = useState(null);
+const Dashboard = ({ user }) => {
+  const [slotInfo, setSlotInfo] = useState(null);
 
   useEffect(() => {
     if (!user || !user.email) {
@@ -13,16 +13,20 @@ const Dashboard = ({ user, setUser }) => {
 
     const q = query(collection(db, "parkingSlots"), where("email", "==", user.email));
 
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      if (querySnapshot.empty) {
-        setSlot(null);
-      } else {
-        const userSlot = querySnapshot.docs[0].data().slot;
-        setSlot(userSlot);
+    const unsubscribe = onSnapshot(
+      q,
+      (querySnapshot) => {
+        if (querySnapshot.empty) {
+          setSlotInfo(null);
+        } else {
+          const data = querySnapshot.docs[0].data();
+          setSlotInfo({ slot: data.slot, status: data.status });
+        }
+      },
+      (error) => {
+        console.error('Error fetching parking slot:', error);
       }
-    }, (error) => {
-      console.error('Error fetching parking slot:', error);
-    });
+    );
 
     return () => unsubscribe();
   }, [user]);
@@ -40,16 +44,24 @@ const Dashboard = ({ user, setUser }) => {
 
           <div className="border-t border-gray-200 mt-6 pt-6">
             <h3 className="text-xl font-semibold text-gray-700 mb-3">Your Parking Slot</h3>
-            {slot ? (
-              <div className="bg-blue-50 border-l-4 border-blue-400 text-blue-700 p-4 rounded">
-                <p className="text-lg">
-                  <strong>Assigned Slot:</strong> {slot}
-                </p>
-              </div>
+            {slotInfo ? (
+              slotInfo.status === 'approved' ? (
+                <div className="bg-green-50 border-l-4 border-green-500 text-green-800 p-4 rounded">
+                  <p className="text-lg font-semibold">🎉 Slot Booked</p>
+                  <p className="text-base mt-1">
+                    <strong>Assigned Slot:</strong> {slotInfo.slot}
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 p-4 rounded">
+                  <p className="text-base font-medium">Slot Requested: {slotInfo.slot}</p>
+                  <p className="text-sm mt-1">Waiting for admin approval...</p>
+                </div>
+              )
             ) : (
-              <div className="flex flex-col items-center justify-center bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 p-4 rounded">
-                <p className="text-base font-medium">No parking slot assigned yet.</p>
-                <p className="text-sm mt-1">Please contact your building admin.</p>
+              <div className="flex flex-col items-center justify-center bg-red-50 border-l-4 border-red-400 text-red-700 p-4 rounded">
+                <p className="text-base font-medium">No slot requested yet.</p>
+                <p className="text-sm mt-1">Please request a parking slot from the available slots page.</p>
               </div>
             )}
           </div>

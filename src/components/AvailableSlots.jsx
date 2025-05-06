@@ -1,76 +1,93 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebase-config';
-import { collection, getDocs, setDoc, doc, query, where } from 'firebase/firestore';
+import {
+  collection,
+  onSnapshot,
+  setDoc,
+  doc,
+  query,
+  where,
+  getDocs
+} from 'firebase/firestore';
 
 const AvailableSlots = ({ user }) => {
   const [slots, setSlots] = useState([]);
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  // Include all 5 slots
+  const allSlots = ['Slot 1', 'Slot 2', 'Slot 3', 'Slot 4', 'Slot 5'];
 
   useEffect(() => {
-    const fetchSlots = async () => {
-      // Fetching all parking slots
-      const querySnapshot = await getDocs(collection(db, 'parkingSlots'));
-      const allSlots = querySnapshot.docs.map(doc => doc.data().slot);
-      const availableSlots = ['Slot 1', 'Slot 2', 'Slot 3', 'Slot 4'].filter(slot => !allSlots.includes(slot));
-      setSlots(availableSlots);
-    };
+    const unsubscribe = onSnapshot(collection(db, 'parkingSlots'), (snapshot) => {
+      const occupied = snapshot.docs.map(doc => doc.data().slot);
+      console.log('Occupied slots:', occupied); // Debugging line
+      const available = allSlots.filter(slot => !occupied.includes(slot));
+      console.log('Available slots:', available); // Debugging line
+      setSlots(available);
+      setLoading(false);
+    });
 
-    fetchSlots();
+    return () => unsubscribe();
   }, []);
 
-  // Function to handle booking a slot
   const handleBookSlot = async (slot) => {
     if (!slot) {
       setMessage('Please select a valid slot.');
       return;
     }
 
-    // Check if the user already has a slot assigned
-    const userSlotRef = query(collection(db, 'parkingSlots'), where('email', '==', user.email));
-    const userSlotSnapshot = await getDocs(userSlotRef);
-
-    if (!userSlotSnapshot.empty) {
-      setMessage('You already have a parking slot.');
-      return;
-    }
-
     try {
-      // Reserve the slot for the user
+      const userSlotRef = query(collection(db, 'parkingSlots'), where('email', '==', user.email));
+      const snapshot = await getDocs(userSlotRef);
+
+      if (!snapshot.empty) {
+        setMessage('❗ You already have a pending or approved parking slot.');
+        return;
+      }
+
       await setDoc(doc(db, 'parkingSlots', user.email), {
         email: user.email,
-        slot: slot,
+        slot,
         assignedOn: new Date(),
+        status: 'pending'
       });
 
-      setMessage(`You have successfully booked ${slot}.`);
-      setSlots(slots.filter((s) => s !== slot)); // Remove the booked slot from available slots
+      setMessage(`✅ Slot request for ${slot} sent! Waiting for admin approval.`);
     } catch (error) {
       console.error('Error booking slot:', error);
-      setMessage('Error booking the slot. Please try again later.');
+      setMessage('❌ Failed to book the slot. Please try again.');
     }
   };
 
   return (
     <div className="max-w-md mx-auto p-6 mt-10 bg-white shadow-md rounded-md">
-      <h2 className="text-2xl font-bold mb-4">Available Parking Slots</h2>
-      <ul>
-        {slots.length > 0 ? (
-          slots.map((slot, index) => (
-            <li key={index} className="mb-2">
+      <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">🚗 Available Parking Slots</h2>
+
+      {loading ? (
+        <p className="text-center text-gray-500">Loading slots...</p>
+      ) : slots.length > 0 ? (
+        <ul className="space-y-3">
+          {slots.map((slot, index) => (
+            <li key={index}>
               <button
                 onClick={() => handleBookSlot(slot)}
-                className="bg-blue-600 text-white w-full py-2 rounded mb-2 hover:bg-blue-700"
+                className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded transition"
               >
-                Book {slot}
+                Request {slot}
               </button>
             </li>
-          ))
-        ) : (
-          <p>No available slots at the moment.</p>
-        )}
-      </ul>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-center text-gray-500">No available slots at the moment.</p>
+      )}
 
-      {message && <p className="text-sm mt-4 text-center text-green-600">{message}</p>}
+      {message && (
+        <div className="mt-6 text-center text-sm text-green-600">
+          {message}
+        </div>
+      )}
     </div>
   );
 };
