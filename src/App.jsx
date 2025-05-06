@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './components/AuthContext'; // Import the custom hook
+import { AuthProvider, useAuth } from './components/AuthContext'; // Import the custom hook
 import Login from './components/Login.jsx';
 import Signup from './components/Signup.jsx';
 import Dashboard from './components/Dashboard.jsx';
@@ -22,6 +22,7 @@ const App = () => {
   }
 
   return (
+    <AuthProvider>
     <Router>
       {/* Navbar will be available on all pages */}
       <Navbar user={user} />
@@ -47,7 +48,8 @@ const App = () => {
         <Route path="/update-slot" element={user ? <UpdateSlotRequest user={user} /> : <Navigate to="/" />} />
       </Routes>
     </Router>
-  );
+
+    </AuthProvider> );
 };
 
 export default App;
