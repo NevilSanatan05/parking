@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebase-config';
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, doc, deleteDoc } from 'firebase/firestore';
 
 const Dashboard = ({ user }) => {
   const [slotInfo, setSlotInfo] = useState(null);
@@ -22,7 +22,7 @@ const Dashboard = ({ user }) => {
           setSlotInfo(null);
         } else {
           const data = querySnapshot.docs[0].data();
-          setSlotInfo({ slot: data.slot, status: data.status });
+          setSlotInfo({ slot: data.slot, status: data.status, id: querySnapshot.docs[0].id });
         }
       },
       (error) => {
@@ -55,6 +55,18 @@ const Dashboard = ({ user }) => {
     console.log("Book visitor parking");
   };
 
+  const handleDeleteSlot = async () => {
+    if (!slotInfo) return;
+    
+    try {
+      await deleteDoc(doc(db, "parkingSlots", slotInfo.id));
+      setSlotInfo(null); // Update the state to reflect the slot deletion
+      console.log("Parking slot deleted successfully");
+    } catch (error) {
+      console.error('Error deleting parking slot:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-4 sm:p-6 md:p-10">
       <div className="max-w-3xl mx-auto bg-white shadow-xl rounded-lg overflow-hidden">
@@ -76,6 +88,12 @@ const Dashboard = ({ user }) => {
                   <p className="text-base mt-1">
                     <strong>Assigned Slot:</strong> {slotInfo.slot}
                   </p>
+                  <button
+                    onClick={handleDeleteSlot}
+                    className="mt-4 w-full bg-red-500 text-white py-2 rounded hover:bg-red-600"
+                  >
+                    Delete Slot
+                  </button>
                 </div>
               ) : (
                 <div className="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 p-4 rounded">

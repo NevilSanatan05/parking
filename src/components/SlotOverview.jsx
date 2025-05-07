@@ -4,11 +4,20 @@ import { collection, getDocs } from 'firebase/firestore';
 import ParkingMap from './ParkingMap';
 
 const SlotOverview = () => {
-  const [availableSlots, setAvailableSlots] = useState([]);
-  const [occupiedSlots, setOccupiedSlots] = useState([]);
+  const [availableSlots, setAvailableSlots] = useState({
+    'Mira Road Station': [],
+    'Kashimira Police Station': [],
+  });
+  const [occupiedSlots, setOccupiedSlots] = useState({
+    'Mira Road Station': [],
+    'Kashimira Police Station': [],
+  });
   const [loading, setLoading] = useState(true);
 
-  const allSlots = ['Slot 1', 'Slot 2', 'Slot 3', 'Slot 4', 'Slot 5', 'Slot 6', 'Slot 7', 'Slot 8', 'Slot 9', 'Slot 10'];
+  const allSlots = {
+    'Mira Road Station': ['Slot 1', 'Slot 2', 'Slot 3', 'Slot 4', 'Slot 5'],
+    'Kashimira Police Station': ['Slot 6', 'Slot 7', 'Slot 8', 'Slot 9', 'Slot 10'],
+  };
 
   const fetchSlots = async () => {
     setLoading(true);
@@ -17,15 +26,27 @@ const SlotOverview = () => {
       const visitorSnapshot = await getDocs(collection(db, 'visitorReservations'));
 
       const approvedSlots = slotSnapshot.docs
-        .filter(doc => doc.data().status === 'approved')
-        .map(doc => doc.data().slot);
+        .filter((doc) => doc.data().status === 'approved')
+        .map((doc) => doc.data().slot);
 
-      const visitorSlots = visitorSnapshot.docs.map(doc => doc.data().slot);
+      const visitorSlots = visitorSnapshot.docs.map((doc) => doc.data().slot);
 
       const occupied = [...new Set([...approvedSlots, ...visitorSlots])];
-      const available = allSlots.filter(slot => !occupied.includes(slot));
 
-      setOccupiedSlots(occupied);
+      const available = {
+        'Mira Road Station': allSlots['Mira Road Station'].filter(
+          (slot) => !occupied.includes(slot)
+        ),
+        'Kashimira Police Station': allSlots['Kashimira Police Station'].filter(
+          (slot) => !occupied.includes(slot)
+        ),
+      };
+
+      setOccupiedSlots({
+        'Mira Road Station': occupied.filter((slot) => allSlots['Mira Road Station'].includes(slot)),
+        'Kashimira Police Station': occupied.filter((slot) => allSlots['Kashimira Police Station'].includes(slot)),
+      });
+
       setAvailableSlots(available);
     } catch (error) {
       console.error('Error fetching slot data:', error);
@@ -47,15 +68,30 @@ const SlotOverview = () => {
       ) : (
         <>
           <div className="max-w-xl mx-auto mb-8 p-6 bg-white shadow rounded">
-            <p><strong>Total Slots:</strong> {allSlots.length}</p>
-            <p><strong>Occupied Slots:</strong> {occupiedSlots.length}</p>
-            <ul className="list-disc list-inside text-red-600">
-              {occupiedSlots.map((slot, i) => <li key={i}>{slot}</li>)}
-            </ul>
-            <p><strong>Available Slots:</strong> {availableSlots.length}</p>
-            <ul className="list-disc list-inside text-green-600">
-              {availableSlots.map((slot, i) => <li key={i}>{slot}</li>)}
-            </ul>
+            {['Mira Road Station', 'Kashimira Police Station'].map((location) => (
+              <div key={location}>
+                <h3 className="text-xl font-semibold mb-2">{location}</h3>
+                <p>
+                  <strong>Total Slots:</strong> {allSlots[location].length}
+                </p>
+                <p>
+                  <strong>Occupied Slots:</strong> {occupiedSlots[location].length}
+                </p>
+                <ul className="list-disc list-inside text-red-600">
+                  {occupiedSlots[location].map((slot, i) => (
+                    <li key={i}>{slot}</li>
+                  ))}
+                </ul>
+                <p>
+                  <strong>Available Slots:</strong> {availableSlots[location].length}
+                </p>
+                <ul className="list-disc list-inside text-green-600">
+                  {availableSlots[location].map((slot, i) => (
+                    <li key={i}>{slot}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
 
             <button
               onClick={fetchSlots}
@@ -66,9 +102,9 @@ const SlotOverview = () => {
           </div>
 
           <ParkingMap
-            allSlots={allSlots}
-            occupiedSlots={occupiedSlots}
-            availableSlots={availableSlots}
+            allSlots={allSlots['Mira Road Station'].concat(allSlots['Kashimira Police Station'])}
+            occupiedSlots={Object.values(occupiedSlots).flat()}
+            availableSlots={Object.values(availableSlots).flat()}
           />
         </>
       )}

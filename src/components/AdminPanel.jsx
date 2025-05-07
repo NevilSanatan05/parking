@@ -13,21 +13,16 @@ const AdminPanel = () => {
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'parkingSlots'), (snapshot) => {
-      const pendingRequests = snapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter(slot => slot.status === 'pending');
-
-      setSlots(pendingRequests);
+      const allSlots = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setSlots(allSlots);
     });
 
     return () => unsubscribe();
   }, []);
 
   const handleApprove = async (id) => {
-    const slotRef = doc(db, 'parkingSlots', id);
     try {
-      await setDoc(slotRef, { status: 'approved' }, { merge: true });
-      setSlots(slots.filter(slot => slot.id !== id));
+      await setDoc(doc(db, 'parkingSlots', id), { status: 'approved' }, { merge: true });
     } catch (error) {
       console.error('Error approving slot:', error);
     }
@@ -35,41 +30,61 @@ const AdminPanel = () => {
 
   const handleReject = async (id) => {
     try {
-      await deleteDoc(doc(db, 'parkingSlots', id));
-      setSlots(slots.filter(slot => slot.id !== id));
+      await setDoc(doc(db, 'parkingSlots', id), { status: 'rejected' }, { merge: true });
     } catch (error) {
       console.error('Error rejecting slot:', error);
     }
   };
 
+  const handleDelete = async (id) => {
+    try {
+      await deleteDoc(doc(db, 'parkingSlots', id));
+    } catch (error) {
+      console.error('Error deleting slot:', error);
+    }
+  };
+
   return (
-    <div className="max-w-lg mx-auto p-6 mt-10 bg-white shadow-md rounded-md">
-      <h2 className="text-2xl font-bold mb-4">Admin Panel - Pending Requests</h2>
+    <div className="max-w-3xl mx-auto p-6 mt-10 bg-white shadow-md rounded-md">
+      <h2 className="text-2xl font-bold mb-4">Admin Panel - Manage All Slots</h2>
       <ul>
         {slots.length > 0 ? (
           slots.map((slot) => (
-            <li key={slot.id} className="mb-3">
+            <li key={slot.id} className="mb-3 border-b pb-2">
               <div className="flex justify-between items-center">
-                <span>{slot.email} - {slot.slot}</span>
+                <div>
+                  <p className="font-medium">{slot.email}</p>
+                  <p className="text-sm">Slot: {slot.slot} | Status: <span className="font-semibold">{slot.status}</span></p>
+                </div>
                 <div className="space-x-2">
+                  {slot.status === 'pending' && (
+                    <>
+                      <button
+                        onClick={() => handleApprove(slot.id)}
+                        className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => handleReject(slot.id)}
+                        className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+                      >
+                        Reject
+                      </button>
+                    </>
+                  )}
                   <button
-                    onClick={() => handleApprove(slot.id)}
-                    className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
-                  >
-                    Approve
-                  </button>
-                  <button
-                    onClick={() => handleReject(slot.id)}
+                    onClick={() => handleDelete(slot.id)}
                     className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
                   >
-                    Reject
+                    Delete
                   </button>
                 </div>
               </div>
             </li>
           ))
         ) : (
-          <p>No pending requests.</p>
+          <p>No slots found.</p>
         )}
       </ul>
     </div>
