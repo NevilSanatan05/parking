@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { auth } from '../firebase-config';
 import { useNavigate, Link } from 'react-router-dom';
 import { FaEnvelope, FaLock } from 'react-icons/fa';
@@ -8,6 +8,7 @@ const Signup = ({ setUser }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSignup = async () => {
@@ -17,16 +18,31 @@ const Signup = ({ setUser }) => {
       return;
     }
 
+    setLoading(true);
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       setUser(user);
 
+      // Send email verification
+      await sendEmailVerification(user);
+
       // Redirect based on email
       user.email === 'admin@example.com' ? navigate('/admin') : navigate('/dashboard');
+
+      setError('A verification email has been sent to your email address. Please verify your email to log in.');
     } catch (err) {
       console.error('Error signing up:', err);
-      setError(err.message);
+      if (err.code === 'auth/email-already-in-use') {
+        setError('This email is already in use. Please use another email.');
+      } else if (err.code === 'auth/weak-password') {
+        setError('Password should be at least 6 characters.');
+      } else {
+        setError('Error signing up. Please try again later.');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -63,8 +79,9 @@ const Signup = ({ setUser }) => {
           <button
             onClick={handleSignup}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded transition duration-200"
+            disabled={loading}
           >
-            Sign Up
+            {loading ? 'Signing up...' : 'Sign Up'}
           </button>
 
           <p className="text-sm mt-4 text-center text-gray-600">
