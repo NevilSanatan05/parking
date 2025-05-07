@@ -11,6 +11,7 @@ import UpdateSlotRequest from './components/UpdateSlotRequest.jsx';
 import VisitorParking from './components/VisitorParking.jsx';
 import SlotOverview from './components/SlotOverview.jsx';
 import ParkingMap from './components/ParkingMap.jsx';
+import ContactAdmin from './components/ContactAdmin.jsx';
 import Navbar from './components/Navbar.jsx';
 
 const App = () => {
@@ -42,6 +43,9 @@ const App = () => {
         {/* Admin-only Routes */}
         <Route path="/admin" element={user && user.email === 'admin@example.com' ? <AdminPanel /> : <Navigate to="/" />} />
         <Route path="/history" element={user && user.email === 'admin@example.com' ? <ParkingSlotHistory /> : <Navigate to="/" />} />
+      
+
+<Route path="/contact-admin" element={<ContactAdmin />} />
 
         {/* Resident-only Routes */}
         <Route path="/available-slots" element={user ? <AvailableSlots user={user} /> : <Navigate to="/" />} />

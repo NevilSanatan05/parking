@@ -15,7 +15,7 @@ const AvailableSlots = ({ user }) => {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
 
-  const allSlots = ['Slot 1', 'Slot 2', 'Slot 3', 'Slot 4', 'Slot 5'];
+  const allSlots = ['Slot 1', 'Slot 2', 'Slot 3', 'Slot 4', 'Slot 5','Slot 6','Slot 7','Slot 8','Slot 9','Slot 10']; // Define total slots
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'parkingSlots'), (snapshot) => {
