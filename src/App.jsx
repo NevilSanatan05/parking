@@ -12,6 +12,7 @@ import VisitorParking from './components/VisitorParking.jsx';
 import SlotOverview from './components/SlotOverview.jsx';
 import ParkingMap from './components/ParkingMap.jsx';
 import ContactAdmin from './components/ContactAdmin.jsx';
+
 import Navbar from './components/Navbar.jsx';
 
 const App = () => {
